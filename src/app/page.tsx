@@ -1,351 +1,384 @@
-import Image from 'next/image'
+"use client";
+import { useRef } from "react";
+import { ethers } from "ethers";
+import { Blob, File, Web3Storage } from "web3.storage";
+import { storeMetadata } from "../app/storeData";
+import ecoadsJson from "../app/assest/json/ecoads.json";
 
 export default function Home() {
-  return ( <> <meta charSet="UTF-8" />
-  <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  {/* swiperjs cdn link */}
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/swiper@7/swiper-bundle.min.css"
-  />
-  {/* font awesome cdn link */}
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css"
-  />
-  {/* google font link */}
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Poppins:wght@400;500;700&display=swap"
-    rel="stylesheet"
-  />
-  {/* custom css link */}
-  <link rel="stylesheet" href="css/style.css" />
-  <title>PsychoArt</title>
-  {/* header section starts */}
-  <header className="header bg-white10">
-    <div className="container">
-      <a href="#" className="logo bold white">
-        Ecoads<span className="lightgreen">Marketplace</span>
-      </a>
-      <div className="menu">
-        <a href="#collections">Productos</a>
-        <div className="btn bg-purple wallet" id="connect">
-          Seleccionar Wallet
-        </div>
-        <div className="container">
-          {/* <button class="button" id="connectButton"> */}
-          {/* Connect wallet */}
-          <span id="loading">
-            <span>•</span>
-            <span>•</span>
-            <span>•</span>
-          </span>
-          {/* <div id="walletID">Your wallet is not connected yet.</div> */}
-          <div id="mobileDeviceWarning">
-            {/* If you are on a mobile phone, please use MetaMask  */}
-            {/* application's browser to connect. */}
-          </div>
-        </div>
-        <title>MetaMask Button</title>
-        <button className="button" id="connectButton">
-          Conectar a MetaMask
-        </button>
-        <h2>
-          Cuenta: <span id="account" />
-        </h2>
-        {/* <button class="enableEthereumButton">Enable Ethereum</button> */}
-        {/* <h2>Account: <span class="showAccount"></span></h2> */}
-      </div>
-      <div className="fas fa-wallet" id="wallet" />
-      <div className="fas fa-bars" id="bar" />
-    </div>
-  </header>
-  {/* header section ends */}
-  {/* home section starts */}
-  <section id="home" className="spacetop15 spacebottom10">
-    <div className="container">
-      <div className="row jc-between ai-center col-reverse-s">
-        <div className="col5 col6-md col12-s ta-center-s">
-          <h1 className="size5 bold spacebottom1">
-            Crea, Compra &amp; Colecciona Tu propio NFT
-          </h1>
-          <p className="size2 spacebottom3 halfwhite">
-            Interactua en nuestros espacios . Crea tu propia Coleccion.
-          </p>
-          <div className="row col8 col9-md jc-between spacebottom4 jc-evenly-s col12-s">
-            <a href="#collections" className="btn bg-purple size2 white ">
-              Explorar Ahora
-            </a>
-            {/* <a href="#banner" class="btn bg-white10 size2 white ">Sell NFT</a> */}
-          </div>
-          <div className="row jc-between">
-            <div className="ta-center">
-              <p className="size3 bold">100k+</p>
-              <p className="size2 halfwhite">Arte</p>
-            </div>
-            <div className="ta-center">
-              <p className="size3 bold">872k+</p>
-              <p className="size2 halfwhite">Espacios</p>
-            </div>
-            <div className="ta-center">
-              <p className="size3 bold">11k+</p>
-              <p className="size2 halfwhite">Clientes</p>
-            </div>
-          </div>
-        </div>
-        <div className="col6 col12-s spacebottom3-s">
-          <img src="img/collage.png" alt="" className="img-responsive float" />
-        </div>
-      </div>
-    </div>
-  </section>
-  {/* home section ends */}
-  {/* partner section starts */}
-  <section className="spacer5 spacer0-xs">
-    <div className="container row jc-between jc-around-md">
-      <img src="img/refi.png" alt="" className="height10 img-responsive-md" />
-      <img src="img/push.png" alt="" className="height10 img-responsive-md" />
-      <img
-        src="img/Polygon.png"
-        alt=""
-        className="height10 img-responsive-md spacetop1-md"
+  const name = useRef<HTMLInputElement>(null);
+  const symbol = useRef<HTMLInputElement>(null);
+  const description = useRef<HTMLInputElement>(null);
+  const image1 = useRef<HTMLInputElement>(null);
+  const image2 = useRef<HTMLInputElement>(null);
+  const image3 = useRef<HTMLInputElement>(null);
+  const image4 = useRef<HTMLInputElement>(null);
+  const image5 = useRef<HTMLInputElement>(null);
+
+  const onCreateNFTCollection = async (eventForm: any) => {
+    eventForm.preventDefault();
+
+    const form = {
+      name: name.current?.value,
+      symbol: symbol.current?.value,
+      description: description.current?.value,
+      image1: image1.current?.files?.[0],
+      image2: image2.current?.files?.[0],
+      image3: image3.current?.files?.[0],
+      image4: image4.current?.files?.[0],
+      image5: image5.current?.files?.[0],
+    };
+
+    if (window.ethereum === undefined) {
+      throw new Error("MetaMask is not installed!");
+    }
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(
+      ecoadsJson.address,
+      ecoadsJson.abi,
+      signer
+    );
+
+    const metadata1 = await storeMetadata(form, form.image1);
+    const metadata2 = await storeMetadata(form, form.image2);
+    const metadata3 = await storeMetadata(form, form.image3);
+    const metadata4 = await storeMetadata(form, form.image4);
+    const metadata5 = await storeMetadata(form, form.image5);
+
+    const metadataArray = [
+      metadata1,
+      metadata2,
+      metadata3,
+      metadata4,
+      metadata5,
+    ];
+
+    if (
+      typeof form.name === "string" &&
+      typeof form.symbol === "string" &&
+      typeof form.description === "string"
+    ) {
+      const createNFTCollectionTx = await contract.createNFTCollection(
+        form.name,
+        form.symbol,
+        metadataArray,
+        { gasLimit: 6000000 }
+      );
+
+      await createNFTCollectionTx.wait();
+      alert("NFT Collection created successfully!");
+    }
+  };
+
+  return (
+    <>
+      {" "}
+      <meta charSet="UTF-8" />
+      <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      {/* swiperjs cdn link */}
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/swiper@7/swiper-bundle.min.css"
       />
-    </div>
-  </section>
-  {/* partner section ends */}
-  {/* about section starts */}
-  <section id="about" className="spacer10">
-    <div className="container">
-      <h1 className="bold size4 ta-center">Sobre Nosotros</h1>
-      <p className="spacebottom3 halfwhite size2 ta-center">
-        <br />
-      </p>
-      <div className="row ai-center jc-between flexcol-s">
-        <div className="col5 col10-s spacebottom2-s">
-          <img src="img/refi3nft.jpg" className="img-responsive" alt="" />
-        </div>
-        <div className="col6 col12-s ta-center-s">
-          <h3 className="size3 bold">Nuestro Lema</h3>
-          <p className="size2 spacetop1 spacebottom3 halfwhite">
-            La plataforma que permite a los anunciantes llegar a una audiencia
-            compretida mediante la tokenizacion de espacios publicitarios
-          </p>
-          <a href="#collections" className="btn bg-purple size2 white">
-            Explorar Mas
+      {/* font awesome cdn link */}
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css"
+      />
+      {/* google font link */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Poppins:wght@400;500;700&display=swap"
+        rel="stylesheet"
+      />
+      {/* custom css link */}
+      <link rel="stylesheet" href="css/style.css" />
+      <title>PsychoArt</title>
+      {/* header section starts */}
+      <header className="header bg-white10">
+        <div className="container">
+          <a href="#" className="logo bold white">
+            Ecoads<span className="lightgreen">Marketplace</span>
           </a>
-        </div>
-      </div>
-    </div>
-  </section>
-  {/* about section ends */}
-  {/* collections section starts */}
-  <section className="collections spacer10" id="collections">
-    <div className="container">
-      <h1 className="bold size4 ta-center">Colecciones</h1>
-      <p className="spacebottom3 halfwhite size2 ta-center">
-        {/* Lorem ipsum dolor sit amet, consectetur<br>adipiscing elit. */}
-      </p>
-      <div className="row spacebottom3 filter-buttons">
-        <div className="col3 filter col6-xs spacebottom1-xs" data-filter="all">
-          Todos
-        </div>
-        <div className="col3 filter col6-xs spacebottom1-xs" data-filter="art">
-          Comestibles
-        </div>
-        <div className="col3 filter col6-xs" data-filter="photograpy">
-          Ecologicos
-        </div>
-        <div className="col3 filter col6-xs" data-filter="pattern">
-          Agricultura
-        </div>
-      </div>
-      <div className="row box-card jc-evenly-md">
-        <div
-          className="col4 card collect bg-white10 col5-md col6-s"
-          data-item="art"
-        >
-          <img src="img/page.jpg" className="img-responsive" alt="" />
-          <div className="row jc-between spacetop2">
-            <div>
-              <p className="size2 halfwhite"></p>
-              {/* <h5 class="size2 bold">Yellow Red</h5> */}
+          <div className="menu">
+            <a href="#collections">Productos</a>
+            <div className="btn bg-purple wallet" id="connect">
+              Seleccionar Wallet
             </div>
-            <div>
-              {/* <p class="current halfwhite">Current bid</p> */}
-              {/* <h5 class="size2 bold">0.005ETH</h5> */}
+            <div className="container">
+              {/* <button class="button" id="connectButton"> */}
+              {/* Connect wallet */}
+              <span id="loading">
+                <span>•</span>
+                <span>•</span>
+                <span>•</span>
+              </span>
+              {/* <div id="walletID">Your wallet is not connected yet.</div> */}
+              <div id="mobileDeviceWarning">
+                {/* If you are on a mobile phone, please use MetaMask  */}
+                {/* application's browser to connect. */}
+              </div>
+            </div>
+            <title>MetaMask Button</title>
+            <button className="button" id="connectButton">
+              Conectar a MetaMask
+            </button>
+            <h2>
+              Cuenta: <span id="account" />
+            </h2>
+            {/* <button class="enableEthereumButton">Enable Ethereum</button> */}
+            {/* <h2>Account: <span class="showAccount"></span></h2> */}
+          </div>
+          <div className="fas fa-wallet" id="wallet" />
+          <div className="fas fa-bars" id="bar" />
+        </div>
+      </header>
+      {/* header section ends */}
+      {/* home section starts */}
+      <section id="home" className="spacetop15 spacebottom10">
+        {/* Yooooooo */}
+        <div className="formulario">
+          <h2>Crea tu colección NFT para el Metaverso</h2>
+          <form onSubmit={onCreateNFTCollection}>
+            <div className="campo">
+              <label>Nombre:</label>
+              <input name="nombre" required ref={name} />
+            </div>
+            <div className="campo">
+              <label>Símbolo:</label>
+              <input name="symbol" required ref={symbol} />
+            </div>
+            <div className="campo">
+              <label>Descripción:</label>
+              <input name="description" required ref={description} />
+            </div>
+            <div className="campo">
+              <label>Imagen 1:</label>
+              <input type="file" name="image1" required ref={image1} />
+            </div>
+            <div className="campo">
+              <label>Imagen 2:</label>
+              <input type="file" name="image2" required ref={image2} />
+            </div>
+            <div className="campo">
+              <label>Imagen 3:</label>
+              <input type="file" name="image3" required ref={image3} />
+            </div>
+            <div className="campo">
+              <label>Imagen 4:</label>
+              <input type="file" name="image4" required ref={image4} />
+            </div>
+            <div className="campo">
+              <label>Imagen 5:</label>
+              <input type="file" name="image5" required ref={image5} />
+            </div>
+            <button type="submit">Crear Colección</button>
+          </form>
+        </div>
+
+        <div className="container">
+          <div className="row jc-between ai-center col-reverse-s">
+            <div className="col5 col6-md col12-s ta-center-s">
+              <h1 className="size5 bold spacebottom1">
+                Crea, Compra &amp; Colecciona Tu propio NFT
+              </h1>
+              <p className="size2 spacebottom3 halfwhite">
+                Interactua en nuestros espacios . Crea tu propia Coleccion.
+              </p>
+              <div className="row col8 col9-md jc-between spacebottom4 jc-evenly-s col12-s">
+                <a href="#collections" className="btn bg-purple size2 white ">
+                  Explorar Ahora
+                </a>
+                {/* <a href="#banner" class="btn bg-white10 size2 white ">Sell NFT</a> */}
+              </div>
+              <div className="row jc-between">
+                <div className="ta-center">
+                  <p className="size3 bold">100k+</p>
+                  <p className="size2 halfwhite">Arte</p>
+                </div>
+                <div className="ta-center">
+                  <p className="size3 bold">872k+</p>
+                  <p className="size2 halfwhite">Espacios</p>
+                </div>
+                <div className="ta-center">
+                  <p className="size3 bold">11k+</p>
+                  <p className="size2 halfwhite">Clientes</p>
+                </div>
+              </div>
+            </div>
+            <div className="col6 col12-s spacebottom3-s">
+              <img
+                src="img/collage.png"
+                alt=""
+                className="img-responsive float"
+              />
             </div>
           </div>
-          <a className="bid size2 ta-center">Place a bid</a>
         </div>
-        <div
-          className="col4 card collect bg-white10 col5-md col6-s"
-          data-item="photograpy"
-        >
-          <img src="img/pag2.jpg" className="img-responsive" alt="" />
-          <div className="row jc-between spacetop2">
-            <div>
-              <p className="size2 halfwhite"></p>
-              {/* <h5 class="size2 bold">Yellow Red</h5>
-                  </div>
-                  <div>
-                      <p class="current halfwhite">Current bid</p>
-                      <h5 class="size2 bold">0.005ETH</h5> */}
+      </section>
+      {/* home section ends */}
+      {/* partner section starts */}
+      <section className="spacer5 spacer0-xs">
+        <div className="container row jc-between jc-around-md">
+          <img
+            src="img/refi.png"
+            alt=""
+            className="height10 img-responsive-md"
+          />
+          <img
+            src="img/push.png"
+            alt=""
+            className="height10 img-responsive-md"
+          />
+          <img
+            src="img/Polygon.png"
+            alt=""
+            className="height10 img-responsive-md spacetop1-md"
+          />
+        </div>
+      </section>
+      {/* partner section ends */}
+      {/* about section starts */}
+      <section id="about" className="spacer10">
+        <div className="container">
+          <h1 className="bold size4 ta-center">Sobre Nosotros</h1>
+          <p className="spacebottom3 halfwhite size2 ta-center">
+            <br />
+          </p>
+          <div className="row ai-center jc-between flexcol-s">
+            <div className="col5 col10-s spacebottom2-s">
+              <img src="img/refi3nft.jpg" className="img-responsive" alt="" />
+            </div>
+            <div className="col6 col12-s ta-center-s">
+              <h3 className="size3 bold">Nuestro Lema</h3>
+              <p className="size2 spacetop1 spacebottom3 halfwhite">
+                La plataforma que permite a los anunciantes llegar a una
+                audiencia compretida mediante la tokenizacion de espacios
+                publicitarios
+              </p>
+              <a href="#collections" className="btn bg-purple size2 white">
+                Explorar Mas
+              </a>
             </div>
           </div>
-          <a className="bid size2 ta-center">Place a bid</a>
         </div>
-        <div
-          className="col4 card collect bg-white10 col5-md col6-s"
-          data-item="pattern"
-        >
-          <img src="img/collection3.png" className="img-responsive" alt="" />
-          <div className="row jc-between spacetop2">
-            <div>
-              <p className="size2 halfwhite"></p>
-              {/* <h5 class="size2 bold">Yellow Red</h5>
-                  </div>
-                  <div>
-                      <p class="current halfwhite">Current bid</p>
-                      <h5 class="size2 bold">0.005ETH</h5> */}
+      </section>
+      {/* about section ends */}
+      {/* collections section starts */}
+      <section className="collections spacer10" id="collections">
+        <div className="container">
+          <h1 className="bold size4 ta-center">Colecciones</h1>
+          <p className="spacebottom3 halfwhite size2 ta-center">
+            {/* Lorem ipsum dolor sit amet, consectetur<br>adipiscing elit. */}
+          </p>
+          <div className="row spacebottom3 filter-buttons">
+            <div
+              className="col3 filter col6-xs spacebottom1-xs"
+              data-filter="all"
+            >
+              Todos
+            </div>
+            <div
+              className="col3 filter col6-xs spacebottom1-xs"
+              data-filter="art"
+            >
+              Comestibles
+            </div>
+            <div className="col3 filter col6-xs" data-filter="photograpy">
+              Ecologicos
+            </div>
+            <div className="col3 filter col6-xs" data-filter="pattern">
+              Agricultura
             </div>
           </div>
-          <a className="bid size2 ta-center">Place a bid</a>
-        </div>
-        <div
-          className="col4 card collect bg-white10 col5-md col6-s"
-          data-item="photograpy"
-        >
-          <img src="img/collection5.png" className="img-responsive" alt="" />
-          <div className="row jc-between spacetop2">
-            <div>
-              <p className="size2 halfwhite"></p>
-              {/* <h5 class="size2 bold">Yellow Red</h5>
-                  </div>
-                  <div>
-                      <p class="current halfwhite">Current bid</p>
-                      <h5 class="size2 bold">0.005ETH</h5> */}
-            </div>
-          </div>
-          <a className="bid size2 ta-center">Place a bid</a>
-        </div>
-        <div
-          className="col4 card collect bg-white10 col5-md col6-s"
-          data-item="pattern"
-        >
-          <img src="img/collection6.png" className="img-responsive" alt="" />
-          <div className="row jc-between spacetop2">
-            <div>
-              <p className="size2 halfwhite"></p>
-              <h5 className="size2 bold" />
-            </div>
-            <div>
-              {/* <p class="current halfwhite">Current bid</p>
-                      <h5 class="size2 bold">0.005ETH</h5> */}
-            </div>
-          </div>
-          <a className="bid size2 ta-center">Place a bid</a>
-        </div>
-        <div
-          className="col4 card collect bg-white10 col5-md col6-s"
-          data-item="art"
-        >
-          <img src="img/collection7.png" className="img-responsive" alt="" />
-          <div className="row jc-between spacetop2">
-            <div>
-              <p className="size2 halfwhite"></p>
-              <h5 className="size2 bold">Yellow Red</h5>
-            </div>
-            <div>
-              {/* <p class="current halfwhite">Current bid</p>
-                      <h5 class="size2 bold">0.005ETH</h5> */}
-            </div>
-          </div>
-          <a className="bid size2 ta-center">Place a bid</a>
-        </div>
-        <div
-          className="col4 card collect bg-white10 col5-md col6-s"
-          data-item="art"
-        >
-          <img src="img/collection7.png" className="img-responsive" alt="" />
-          <div className="row jc-between spacetop2">
-            <div>
-              <p className="size2 halfwhite"></p>
-              <h5 className="size2 bold">Yellow Red</h5>
-            </div>
-            <div>
-              {/* <p class="current halfwhite">Current bid</p>
-                      <h5 class="size2 bold">0.005ETH</h5> */}
-            </div>
-          </div>
-          <a className="bid size2 ta-center">Place a bid</a>
-        </div>
-        <div
-          className="col4 card collect bg-white10 col5-md col6-s"
-          data-item="photograpy"
-        >
-          <img src="img/collection8.png" className="img-responsive" alt="" />
-          <div className="row jc-between spacetop2">
-            <div>
-              <p className="size2 halfwhite"></p>
-              <h5 className="size2 bold">Yellow Red</h5>
-            </div>
-            <div>
-              {/* <p class="current halfwhite">Current bid</p>
-                      <h5 class="size2 bold">0.005ETH</h5> */}
-            </div>
-          </div>
-          <a className="bid size2 ta-center">Place a bid</a>
-        </div>
-        <div
-          className="col4 card collect bg-white10 col5-md col6-s"
-          data-item="pattern"
-        >
-          <img src="img/collection9.png" className="img-responsive" alt="" />
-          <div className="row jc-between spacetop2">
-            <div>
-              <p className="size2 halfwhite"></p>
-              <h5 className="size2 bold">Yellow Red</h5>
-            </div>
-            <div>
-              {/* <p class="current halfwhite">Current bid</p>
-                      <h5 class="size2 bold">0.005ETH</h5> */}
-            </div>
-          </div>
-          <a className="bid size2 ta-center">Place a bid</a>
-        </div>
-      </div>
-    </div>
-  </section>
-  {/* collections section ends */}
-  {/* featured section starts */}
-  <section className="featured spacer10" id="featured">
-    <div className="container">
-      <h1 className="bold size4 ta-center">Nuestro Equipo</h1>
-      {/* <p class="spacebottom3 halfwhite size2 ta-center">
-          Lorem ipsum dolor sit amet, consectetur<br>adipiscing elit.
-      </p> */}
-      <div className="swiper card-slider row">
-        <div className="swiper-wrapper">
-          <div className="col4 col5-md col7-s swiper-slide">
-            <div className="card bg-white10">
-              <img src="img/1.png" className="img-responsive" alt="" />
+          <div className="row box-card jc-evenly-md">
+            <div
+              className="col4 card collect bg-white10 col5-md col6-s"
+              data-item="art"
+            >
+              <img src="img/page.jpg" className="img-responsive" alt="" />
               <div className="row jc-between spacetop2">
                 <div>
                   <p className="size2 halfwhite"></p>
                   {/* <h5 class="size2 bold">Yellow Red</h5> */}
                 </div>
                 <div>
-                  {/* <p class="current halfwhite">Current bid</p>
-                              <h5 class="size2 bold">0.005ETH</h5> */}
+                  {/* <p class="current halfwhite">Current bid</p> */}
+                  {/* <h5 class="size2 bold">0.005ETH</h5> */}
                 </div>
               </div>
               <a className="bid size2 ta-center">Place a bid</a>
             </div>
-          </div>
-          <div className="col4 col5-md col7-s swiper-slide">
-            <div className="card bg-white10">
-              <img src="img/2.png" className="img-responsive" alt="" />
+            <div
+              className="col4 card collect bg-white10 col5-md col6-s"
+              data-item="photograpy"
+            >
+              <img src="img/pag2.jpg" className="img-responsive" alt="" />
+              <div className="row jc-between spacetop2">
+                <div>
+                  <p className="size2 halfwhite"></p>
+                  {/* <h5 class="size2 bold">Yellow Red</h5>
+                  </div>
+                  <div>
+                      <p class="current halfwhite">Current bid</p>
+                      <h5 class="size2 bold">0.005ETH</h5> */}
+                </div>
+              </div>
+              <a className="bid size2 ta-center">Place a bid</a>
+            </div>
+            <div
+              className="col4 card collect bg-white10 col5-md col6-s"
+              data-item="pattern"
+            >
+              <img
+                src="img/collection3.png"
+                className="img-responsive"
+                alt=""
+              />
+              <div className="row jc-between spacetop2">
+                <div>
+                  <p className="size2 halfwhite"></p>
+                  {/* <h5 class="size2 bold">Yellow Red</h5>
+                  </div>
+                  <div>
+                      <p class="current halfwhite">Current bid</p>
+                      <h5 class="size2 bold">0.005ETH</h5> */}
+                </div>
+              </div>
+              <a className="bid size2 ta-center">Place a bid</a>
+            </div>
+            <div
+              className="col4 card collect bg-white10 col5-md col6-s"
+              data-item="photograpy"
+            >
+              <img
+                src="img/collection5.png"
+                className="img-responsive"
+                alt=""
+              />
+              <div className="row jc-between spacetop2">
+                <div>
+                  <p className="size2 halfwhite"></p>
+                  {/* <h5 class="size2 bold">Yellow Red</h5>
+                  </div>
+                  <div>
+                      <p class="current halfwhite">Current bid</p>
+                      <h5 class="size2 bold">0.005ETH</h5> */}
+                </div>
+              </div>
+              <a className="bid size2 ta-center">Place a bid</a>
+            </div>
+            <div
+              className="col4 card collect bg-white10 col5-md col6-s"
+              data-item="pattern"
+            >
+              <img
+                src="img/collection6.png"
+                className="img-responsive"
+                alt=""
+              />
               <div className="row jc-between spacetop2">
                 <div>
                   <p className="size2 halfwhite"></p>
@@ -353,92 +386,220 @@ export default function Home() {
                 </div>
                 <div>
                   {/* <p class="current halfwhite">Current bid</p>
-                              <h5 class="size2 bold">0.005ETH</h5> */}
+                      <h5 class="size2 bold">0.005ETH</h5> */}
                 </div>
               </div>
               <a className="bid size2 ta-center">Place a bid</a>
             </div>
-          </div>
-          <div className="col4 col5-md col7-s swiper-slide">
-            <div className="card bg-white10">
-              <img src="img/3.png" className="img-responsive" alt="" />
+            <div
+              className="col4 card collect bg-white10 col5-md col6-s"
+              data-item="art"
+            >
+              <img
+                src="img/collection7.png"
+                className="img-responsive"
+                alt=""
+              />
               <div className="row jc-between spacetop2">
                 <div>
                   <p className="size2 halfwhite"></p>
-                  <h5 className="size2 bold" />
+                  <h5 className="size2 bold">Yellow Red</h5>
                 </div>
                 <div>
                   {/* <p class="current halfwhite">Current bid</p>
-                              <h5 class="size2 bold">0.005ETH</h5> */}
+                      <h5 class="size2 bold">0.005ETH</h5> */}
                 </div>
               </div>
               <a className="bid size2 ta-center">Place a bid</a>
             </div>
-          </div>
-          <div className="col4 col5-md col7-s swiper-slide">
-            <div className="card bg-white10">
-              <img src="img/5.png" className="img-responsive" alt="" />
+            <div
+              className="col4 card collect bg-white10 col5-md col6-s"
+              data-item="art"
+            >
+              <img
+                src="img/collection7.png"
+                className="img-responsive"
+                alt=""
+              />
               <div className="row jc-between spacetop2">
                 <div>
                   <p className="size2 halfwhite"></p>
-                  <h5 className="size2 bold" />
+                  <h5 className="size2 bold">Yellow Red</h5>
                 </div>
                 <div>
                   {/* <p class="current halfwhite">Current bid</p>
-                              <h5 class="size2 bold">0.005ETH</h5> */}
+                      <h5 class="size2 bold">0.005ETH</h5> */}
                 </div>
               </div>
               <a className="bid size2 ta-center">Place a bid</a>
             </div>
-          </div>
-          <div className="col4 col5-md col7-s swiper-slide">
-            <div className="card bg-white10">
-              <img src="img/4.png" className="img-responsive" alt="" />
+            <div
+              className="col4 card collect bg-white10 col5-md col6-s"
+              data-item="photograpy"
+            >
+              <img
+                src="img/collection8.png"
+                className="img-responsive"
+                alt=""
+              />
               <div className="row jc-between spacetop2">
                 <div>
                   <p className="size2 halfwhite"></p>
-                  <h5 className="size2 bold" />
+                  <h5 className="size2 bold">Yellow Red</h5>
                 </div>
                 <div>
                   {/* <p class="current halfwhite">Current bid</p>
-                              <h5 class="size2 bold">0.005ETH</h5> */}
+                      <h5 class="size2 bold">0.005ETH</h5> */}
                 </div>
               </div>
               <a className="bid size2 ta-center">Place a bid</a>
             </div>
-          </div>
-          <div className="col4 col5-md col7-s swiper-slide">
-            <div className="card bg-white10">
-              <img src="img/6.png" className="img-responsive" alt="" />
+            <div
+              className="col4 card collect bg-white10 col5-md col6-s"
+              data-item="pattern"
+            >
+              <img
+                src="img/collection9.png"
+                className="img-responsive"
+                alt=""
+              />
               <div className="row jc-between spacetop2">
                 <div>
                   <p className="size2 halfwhite"></p>
-                  <h5 className="size2 bold" />
+                  <h5 className="size2 bold">Yellow Red</h5>
                 </div>
                 <div>
                   {/* <p class="current halfwhite">Current bid</p>
-                              <h5 class="size2 bold">0.005ETH</h5> */}
+                      <h5 class="size2 bold">0.005ETH</h5> */}
                 </div>
               </div>
               <a className="bid size2 ta-center">Place a bid</a>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-  {/* featured section ends */}
-  {/* creator section starts */}
-  {/* <section class="creator spacer10" id="featured">
+      </section>
+      {/* collections section ends */}
+      {/* featured section starts */}
+      <section className="featured spacer10" id="featured">
+        <div className="container">
+          <h1 className="bold size4 ta-center">Nuestro Equipo</h1>
+          {/* <p class="spacebottom3 halfwhite size2 ta-center">
+          Lorem ipsum dolor sit amet, consectetur<br>adipiscing elit.
+      </p> */}
+          <div className="swiper card-slider row">
+            <div className="swiper-wrapper">
+              <div className="col4 col5-md col7-s swiper-slide">
+                <div className="card bg-white10">
+                  <img src="img/1.png" className="img-responsive" alt="" />
+                  <div className="row jc-between spacetop2">
+                    <div>
+                      <p className="size2 halfwhite"></p>
+                      {/* <h5 class="size2 bold">Yellow Red</h5> */}
+                    </div>
+                    <div>
+                      {/* <p class="current halfwhite">Current bid</p>
+                              <h5 class="size2 bold">0.005ETH</h5> */}
+                    </div>
+                  </div>
+                  <a className="bid size2 ta-center">Place a bid</a>
+                </div>
+              </div>
+              <div className="col4 col5-md col7-s swiper-slide">
+                <div className="card bg-white10">
+                  <img src="img/2.png" className="img-responsive" alt="" />
+                  <div className="row jc-between spacetop2">
+                    <div>
+                      <p className="size2 halfwhite"></p>
+                      <h5 className="size2 bold" />
+                    </div>
+                    <div>
+                      {/* <p class="current halfwhite">Current bid</p>
+                              <h5 class="size2 bold">0.005ETH</h5> */}
+                    </div>
+                  </div>
+                  <a className="bid size2 ta-center">Place a bid</a>
+                </div>
+              </div>
+              <div className="col4 col5-md col7-s swiper-slide">
+                <div className="card bg-white10">
+                  <img src="img/3.png" className="img-responsive" alt="" />
+                  <div className="row jc-between spacetop2">
+                    <div>
+                      <p className="size2 halfwhite"></p>
+                      <h5 className="size2 bold" />
+                    </div>
+                    <div>
+                      {/* <p class="current halfwhite">Current bid</p>
+                              <h5 class="size2 bold">0.005ETH</h5> */}
+                    </div>
+                  </div>
+                  <a className="bid size2 ta-center">Place a bid</a>
+                </div>
+              </div>
+              <div className="col4 col5-md col7-s swiper-slide">
+                <div className="card bg-white10">
+                  <img src="img/5.png" className="img-responsive" alt="" />
+                  <div className="row jc-between spacetop2">
+                    <div>
+                      <p className="size2 halfwhite"></p>
+                      <h5 className="size2 bold" />
+                    </div>
+                    <div>
+                      {/* <p class="current halfwhite">Current bid</p>
+                              <h5 class="size2 bold">0.005ETH</h5> */}
+                    </div>
+                  </div>
+                  <a className="bid size2 ta-center">Place a bid</a>
+                </div>
+              </div>
+              <div className="col4 col5-md col7-s swiper-slide">
+                <div className="card bg-white10">
+                  <img src="img/4.png" className="img-responsive" alt="" />
+                  <div className="row jc-between spacetop2">
+                    <div>
+                      <p className="size2 halfwhite"></p>
+                      <h5 className="size2 bold" />
+                    </div>
+                    <div>
+                      {/* <p class="current halfwhite">Current bid</p>
+                              <h5 class="size2 bold">0.005ETH</h5> */}
+                    </div>
+                  </div>
+                  <a className="bid size2 ta-center">Place a bid</a>
+                </div>
+              </div>
+              <div className="col4 col5-md col7-s swiper-slide">
+                <div className="card bg-white10">
+                  <img src="img/6.png" className="img-responsive" alt="" />
+                  <div className="row jc-between spacetop2">
+                    <div>
+                      <p className="size2 halfwhite"></p>
+                      <h5 className="size2 bold" />
+                    </div>
+                    <div>
+                      {/* <p class="current halfwhite">Current bid</p>
+                              <h5 class="size2 bold">0.005ETH</h5> */}
+                    </div>
+                  </div>
+                  <a className="bid size2 ta-center">Place a bid</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* featured section ends */}
+      {/* creator section starts */}
+      {/* <section class="creator spacer10" id="featured">
   <div class="container"> */}
-  {/* <h1 class="bold size4 ta-center">Top Creator</h1> */}
-  {/* <p class="spacebottom3 halfwhite size2 ta-center"> */}
-  {/* Lorem ipsum dolor sit amet, consectetur<br>adipiscing elit. */}
-  {/* </p> */}
-  {/* <div class="swiper row creator-slider"> */}
-  {/* <div class="swiper-wrapper"> */}
-  {/* <div class="col4 col5-md col7-s swiper-slide"> */}
-  {/* <div class="card-creator bg-white10 ta-center">
+      {/* <h1 class="bold size4 ta-center">Top Creator</h1> */}
+      {/* <p class="spacebottom3 halfwhite size2 ta-center"> */}
+      {/* Lorem ipsum dolor sit amet, consectetur<br>adipiscing elit. */}
+      {/* </p> */}
+      {/* <div class="swiper row creator-slider"> */}
+      {/* <div class="swiper-wrapper"> */}
+      {/* <div class="col4 col5-md col7-s swiper-slide"> */}
+      {/* <div class="card-creator bg-white10 ta-center">
                       <img src="img/creator1.png" class="img-responsive" alt="">
                       <img src="img/photo1.png" class="photo" alt="">
                       <h5 class="spacer1 size2 bold">John Wick</h5>
@@ -447,7 +608,7 @@ export default function Home() {
                           elit.</p>
                       <button class="follow ta-center bg-purple white">+ Follow</button>
                   </div> */}
-  {/* </div>
+      {/* </div>
               <div class="col4 col5-md col7-s swiper-slide">
                   <div class="card-creator bg-white10 ta-center">
                       <img src="img/creator2.png" class="img-responsive" alt="">
@@ -468,20 +629,114 @@ export default function Home() {
                           consectetur<br>adipiscing
                           elit.</p>
                       <button class="follow ta-center bg-purple white">+ Follow</button> */}
-  {/* </div>
+      {/* </div>
               </div> */}
-  {/* creator section ends */}
-  {/* FAQ section starts */}
-  <section className="spacer10" id="faq">
-    <div className="container">
-      <h1 className="bold size4 ta-center">
-        Formulario Contrato
-        <br />
-      </h1>
-      <p className="spacebottom3 halfwhite size2 ta-center">
-        {/* Wanna Ask Something? */}
-      </p>
-      {/* <div class="row jc-between">
+      {/* creator section ends */}
+      {/* FAQ section starts */}
+      <section className="spacer10" id="faq">
+        <div className="container">
+          <h1 className="bold size4 ta-center">
+            Formulario Contrato
+            <br />
+          </h1>
+          <p className="spacebottom3 halfwhite size2 ta-center">
+            <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+              <form className="space-y-4">
+                <div>
+                  <label
+                    className="block mb-2 text-sm font-medium text-gray-700"
+                    for="nombre"
+                  >
+                    Nombre
+                  </label>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    className="block mb-2 text-sm font-medium text-gray-700"
+                    for="symbol"
+                  >
+                    Symbol
+                  </label>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    type="text"
+                    id="symbol"
+                    name="symbol"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    Imagen 1
+                  </label>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    type="file"
+                    name="image1"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    Imagen 2
+                  </label>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    type="file"
+                    name="image2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    Imagen 3
+                  </label>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    type="file"
+                    name="image3"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    Imagen 4
+                  </label>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    type="file"
+                    name="image4"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                    Imagen 5
+                  </label>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    type="file"
+                    name="image5"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+                >
+                  Registrar
+                </button>
+              </form>
+            </div>
+          </p>
+          {/* <div class="row jc-between">
           <div class="box-faq col6 col12-s">
               <div class="box spacebottom5">
                   <div class="title row jc-between">
@@ -548,75 +803,82 @@ export default function Home() {
                       Voluptates
                       ratione ea officiis ad quam blanditiis, dignissimos adipisci suscipit nobis temporibus
                       molestias fugiat quas possimus assumenda quod quae modi dolorem sed.</p> */}
-    </div>
-  </section>
-  {/* FAQ section ends */}
-  {/* banner section starts */}
-  {/* <section class="spacer10" id="banner">
+        </div>
+      </section>
+      {/* FAQ section ends */}
+      {/* banner section starts */}
+      {/* <section class="spacer10" id="banner">
   <div class="container spacer5 bg-purple ta-center">
       <h1 class="size5 bold spacebottom2 size4-xs">Get ready to collect<br>our NFT</h1>
       <a class="btn bg-halfwhite size2 started ">Get started</a>
   </div>
     </section> */}
-  {/* banner section ends */}
-  {/* footer section starts */}
-  <footer className="spacer10">
-    <div className="container row jc-between flexcol-s ta-center-s">
-      <div className="row flexcol spacebottom3-s">
-        <a href="#home" className="size2 bold white">
-          Ecoads<span className="lightgreen">Marketplace</span>
-        </a>
-        <p className="size2 halfwhite spacetop2">
-          El mejor NFT marketplace sitioweb en
-          <br />
-          el mundo con la mejor experiencia
-          <br />
-        </p>
-      </div>
-      <div className="row flexcol spacebottom3-s">
-        <a href="#about" className="bold size2 white">
-          Sobre Nosotros
-        </a>
-        <a href="#" className="size2 halfwhite spacetop2">
-          Nosotros
-        </a>
-        <a href="#" className="size2 halfwhite spacetop2">
-          Productos
-        </a>
-        <a href="#" className="size2 halfwhite spacetop2">
-          Equipo
-        </a>
-        {/* <a href="#" class="size2 halfwhite spacetop2">FAQ</a> */}
-      </div>
-      {/* <div class="row flexcol spacebottom3-s">
+      {/* banner section ends */}
+      {/* footer section starts */}
+      <footer className="spacer10">
+        <div className="container row jc-between flexcol-s ta-center-s">
+          <div className="row flexcol spacebottom3-s">
+            <a href="#home" className="size2 bold white">
+              Ecoads<span className="lightgreen">Marketplace</span>
+            </a>
+            <p className="size2 halfwhite spacetop2">
+              El mejor NFT marketplace sitioweb en
+              <br />
+              el mundo con la mejor experiencia
+              <br />
+            </p>
+          </div>
+          <div className="row flexcol spacebottom3-s">
+            <a href="#about" className="bold size2 white">
+              Sobre Nosotros
+            </a>
+            <a href="#" className="size2 halfwhite spacetop2">
+              Nosotros
+            </a>
+            <a href="#" className="size2 halfwhite spacetop2">
+              Productos
+            </a>
+            <a href="#" className="size2 halfwhite spacetop2">
+              Equipo
+            </a>
+            {/* <a href="#" class="size2 halfwhite spacetop2">FAQ</a> */}
+          </div>
+          {/* <div class="row flexcol spacebottom3-s">
           <a href="#" class="bold size2 white">Equipo</a>
           <a href="#" class="size2 halfwhite spacetop2">Our Team</a>
           <a href="#" class="size2 halfwhite spacetop2">Partner With Us</a>
           <a href="#" class="size2 halfwhite spacetop2">Privacy & Policy</a>
           <a href="#" class="size2 halfwhite spacetop2">Features</a> */}
-      {/* </div> */}
-      <div className="row flexcol spacebottom3-s">
-        <h5 className="bold size2">Contact</h5>
-        <a href="#" className="size2 halfwhite spacetop2">
-          +57 3212426036
-        </a>
-        <a href="#" className="size2 halfwhite spacetop2">
-          ecoadsmarketplace@gmail.com
-        </a>
-        <div className="row jc-between spacetop2 jc-evenly-s">
-          <a href="#" className="fab fa-youtube size2 halfwhite spacetop2" />
-          <a href="#" className="fab fa-discord size2 halfwhite spacetop2" />
-          <a href="#" className="fab fa-instagram size2 halfwhite spacetop2" />
+          {/* </div> */}
+          <div className="row flexcol spacebottom3-s">
+            <h5 className="bold size2">Contact</h5>
+            <a href="#" className="size2 halfwhite spacetop2">
+              +57 3212426036
+            </a>
+            <a href="#" className="size2 halfwhite spacetop2">
+              ecoadsmarketplace@gmail.com
+            </a>
+            <div className="row jc-between spacetop2 jc-evenly-s">
+              <a
+                href="#"
+                className="fab fa-youtube size2 halfwhite spacetop2"
+              />
+              <a
+                href="#"
+                className="fab fa-discord size2 halfwhite spacetop2"
+              />
+              <a
+                href="#"
+                className="fab fa-instagram size2 halfwhite spacetop2"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    {/* <p class="size2 halfwhite spacetop5 ta-center">Created by <span class="white bold">Zarror</span> | All Right */}
-    {/* Reserved!</p> */}
-  </footer>
-  {/* footer section ends */}
-  {/* custom js file link */}
-</>
-
-   
-  )
+        {/* <p class="size2 halfwhite spacetop5 ta-center">Created by <span class="white bold">Zarror</span> | All Right */}
+        {/* Reserved!</p> */}
+      </footer>
+      {/* footer section ends */}
+      {/* custom js file link */}
+    </>
+  );
 }
